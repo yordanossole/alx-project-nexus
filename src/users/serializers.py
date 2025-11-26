@@ -1,19 +1,37 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from django.contrib.auth import get_user_model
-from .models import UserProfile
+from .models import User
 
-class UserProfileSerializer(ModelSerializer):
+class UserSerializer(ModelSerializer):
     
+    profile_picture_url = serializers.SerializerMethodField()
     class Meta:
-        model = UserProfile
+        model = User
         fields = [
-            'id', 'username', 'email', 'first_name', 'last_name',
-            'password']
-        read_only_fields = ['id']  
+            'id', 
+            'username', 
+            'email', 
+            'first_name', 
+            'last_name',
+            'password',
+            'profile_picture',
+            'profile_picture_url',
+            'phone_number',
+            'is_verified',
+            'created_at',
+            'updated_at'
+        ]
+        
+        read_only_fields = ['id', 'password', 'email', 'created_at', 'is_verified', 'picture_profile_url']  
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 8},
         }
+        
+    def get_profile_picture_url(self, obj):
+        if obj.profile_picture:
+            return self.context['request'].build_absolute_uri(obj.profile_picture.url)
+        return None
     
     def relational_fields(self):
         return {
@@ -31,7 +49,7 @@ class UserProfileSerializer(ModelSerializer):
         return value
         
     def create(self, validated_data):
-        user = UserProfile(**validated_data)
+        user = User(**validated_data)
         user.set_password(validated_data['password'])
         user.save()
         return user

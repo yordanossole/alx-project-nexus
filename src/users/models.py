@@ -4,6 +4,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     BaseUserManager
 )
+from django.utils.translation import gettext_lazy as _
 
 # def createUser(username, last_*args, **kwargs):
 
@@ -41,6 +42,7 @@ class User(AbstractUser, PermissionsMixin):
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     email = models.EmailField(unique=True)
+    phone_number = models.CharField(_("Phone number"), max_length=15, unique=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     is_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -103,31 +105,31 @@ class User(AbstractUser, PermissionsMixin):
     
 #     def __repr__(self):
 #         return f"GroupMember(user={self.user.username}, group={self.group.name})"
-class UserProfile(models.Model):
-    username = models.CharField(unique=True, max_length=30)
-    email = models.EmailField(unique=True)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30, blank=True)
-    password = models.CharField(max_length=128)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    bio = models.TextField(blank=True, null=True)
-    avatar = models.ImageField(blank=True, null=True)
+# class UserProfile(models.Model):
+#     username = models.CharField(unique=True, max_length=30)
+#     email = models.EmailField(unique=True)
+#     first_name = models.CharField(max_length=30, blank=True)
+#     last_name = models.CharField(max_length=30, blank=True)
+#     password = models.CharField(max_length=128)
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+#     bio = models.TextField(blank=True, null=True)
+#     avatar = models.ImageField(blank=True, null=True)
 
-    class Meta:
-        verbose_name = 'User Profile'
-        verbose_name_plural = 'User Profiles'
+#     class Meta:
+#         verbose_name = 'User Profile'
+#         verbose_name_plural = 'User Profiles'
 
-    def __str__(self):
-        return f"{self.user.username}, {self.user.email}, {self.user.role}"
+#     def __str__(self):
+#         return f"{self.user.username}, {self.user.email}, {self.user.role}"
 
-    def __repr__(self):
-        return f"{self.user.username}, {self.user.email}, {self.user.role}"
+#     def __repr__(self):
+#         return f"{self.user.username}, {self.user.email}, {self.user.role}"
     
-    def save(self, *args, **kwargs):
-        if not self.user.username:
-            self.user.username = self.user.email.split('@')[0]
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if not self.user.username:
+#             self.user.username = self.user.email.split('@')[0]
+#         super().save(*args, **kwargs)
         
-    def get_full_name(self):
-        return f"{self.user.first_name} {self.user.last_name}".strip()
+#     def get_full_name(self):
+#         return f"{self.user.first_name} {self.user.last_name}".strip()
     
