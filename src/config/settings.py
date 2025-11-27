@@ -34,11 +34,13 @@ INSTALLED_APPS = [
     'custom_auth',
     'users',
     'feed',
+    'chat',
 
     # third-party apps
     'redis',
     'rest_framework',
     'rest_framework_simplejwt',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -109,12 +111,12 @@ AUTH_USER_MODEL = 'users.User'
 
 ASGI_APPLICATION = 'config.asgi.application'
 
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-#         'CONFIG': {"hosts": [("127.0.0.1", 6379)]},
-#     },
-# }
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {"hosts": [("127.0.0.1", 6379)]},
+    },
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -167,6 +169,13 @@ SIMPLE_JWT = {
 # JWT cookie settings
 JWT_COOKIE_SECURE = False  # Set to True in production
 JWT_COOKIE_NAME = 'refresh_token'
+
+
+AUTHENTICATION_BACKENDS = [
+    'custom_auth.backends.EmailorUsernameAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 
 APPEND_SLASH = False

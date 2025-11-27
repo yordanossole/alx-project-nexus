@@ -4,7 +4,12 @@ from django.conf import settings
 class Posts(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    content = models.TextField()
+    content = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='post_images/', blank=True, null=True)
+    video = models.FileField(upload_to='post_videos/', blank=True, null=True)
+    
+    is_public = models.BooleanField(default=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -13,6 +18,9 @@ class Posts(models.Model):
 
     def __str__(self):
         return self.title
+    
+    def __repr__(self):
+        return f"Post(id={self.id}, user={self.user.username}, title={self.title})"
 
 class Comment(models.Model):
     post = models.ForeignKey(Posts, related_name='comments', on_delete=models.CASCADE)

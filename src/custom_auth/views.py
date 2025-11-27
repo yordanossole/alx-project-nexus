@@ -1,4 +1,5 @@
 import secrets
+from urllib import request
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.views import APIView
@@ -18,21 +19,91 @@ from datetime import timedelta
 from django.contrib.auth import authenticate
 
 from . import serializers
+from users.models import User
+
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.generics import GenericAPIView
 
 
+class UserRegisterView(GenericAPIView):
+
+    serializer_class = serializers.UserRegisterSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response(
+            {
+                "message": "User registered successfully",
+                "user": serializer.data
+            },
+            status=status.HTTP_201_CREATED
+        )
 
 class LoginView(APIView):
-    
-    # serializer_class = AuthTokenSerializer
+
+    serializer_class = serializers.LoginSerializer
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = serializers.LoginSerializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        tokens = serializer.create_token(serializer.validated_data['user'])
-        return Response(tokens, status=status.HTTP_200_OK)
+        
+        user = serializer.validated_data['user']
+        tokens = serializer.create_token(user)
+
+        return Response({
+            "user": {
+                "id": user.id,
+                "username": user.username,
+            },
+            "tokens": tokens
+        }, status=status.HTTP_200_OK)
+        
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     tokens = serializer.create_token(serializer.validated_data['user'])
+        
+    #     return Response({
+    #         "access": tokens['access'],
+    #         "refresh": tokens['refresh'],
+    #         "message": "Login successful"
+    #     }, status=status.HTTP_200_OK
+    #     )
+        
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
     
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception:
+            return Response({"detail": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "Successfully logged out"}, status=status.HTTP_205_RESET_CONTENT)
     
+class ChangePasswordView(APIView):
+
+    serializer_class = serializers.ChangePasswordSerializer
+    model = User
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        return self.request.user
+    
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.get_object()
+        if not user.check_password(serializer.validated_data['old_password']):
+            return Response({"detail": "Old password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(serializer.validated_data['new_password'])
+        user.save()
+        return Response({"detail": "Password updated successfully"}, status=status.HTTP_200_OK)
+
 # class RegistrationView(viewsets.ModelViewSet):
     
 #     queryset = UserProfile.objects.all()
