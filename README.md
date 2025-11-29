@@ -1,87 +1,120 @@
-# **Social Media Feed Backend**  
+# Social Media API (Django REST)
 
-## **📌 Overview**  
-This project involves building a scalable backend for a social media feed using **Django, PostgreSQL, and GraphQL (Graphene)**. The system handles **post management, user interactions (likes, comments, shares), and flexible querying** to support high-traffic applications.  
+Backend for a social platform built with Django REST Framework, PostgreSQL, JWT auth, and Swagger docs. Provides posts, users, stories, chat, and feed APIs with pagination and filtering.
 
-### **🔹 Key Takeaways**  
-✔ **GraphQL for flexible data fetching** – Efficiently query only the needed data.  
-✔ **Scalable schema design** – Optimized for high-volume interactions.  
-✔ **Real-time interaction management** – Track likes, comments, and shares.  
-✔ **API testing with GraphQL Playground** – Easy debugging and exploration.  
+## Tech Stack
+- Django 5, Django REST Framework
+- PostgreSQL, Redis (Channels configured)
+- JWT (djangorestframework-simplejwt)
+- Swagger/Redoc (drf-yasg)
+- django-filter for query filtering
 
----
+## Quick Start
 
-## **🎯 Project Goals**  
-1. **Post Management** – CRUD operations for posts.  
-2. **Flexible Querying** – GraphQL API for fetching nested data.  
-3. **Interaction System** – Like, comment, and share functionality.  
-4. **Performance Optimization** – Efficient database queries for scalability.  
+### Run with Docker (recommended)
+```bash
+docker compose up --build
+```
+- API: http://localhost:8010/
+- Swagger: http://localhost:8010/swagger/
+- Redoc: http://localhost:8010/redoc/
 
----
+The compose file provisions Postgres and Redis, runs migrations and collects static, then starts the server.
 
-## **🛠 Technologies Used**  
-| **Tech** | **Purpose** |  
-|----------|------------|  
-| **Django** | Backend framework |  
-| **PostgreSQL** | Relational database |  
-| **GraphQL (Graphene)** | Flexible API queries |  
-| **GraphQL Playground** | API testing & documentation |  
+### Run locally
+Requirements: Python 3.10+, PostgreSQL, Redis
 
----
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-## **✨ Key Features**  
-### **1. GraphQL API Endpoints**  
-- Fetch posts, comments, and interactions in a single query.  
-- Mutations for creating, updating, and deleting posts.  
+export DB_NAME=your_db
+export DB_USER=your_user
+export DB_PASSWORD=your_password
+export DB_HOST=localhost
+export DB_PORT=5432
 
-### **2. Interaction Management**  
-- Like, comment, and share functionality.  
-- Analytics on user engagement.  
+python src/manage.py makemigrations
+python src/manage.py migrate
+python src/manage.py createsuperuser
+python src/manage.py runserver 0.0.0.0:8010
+```
 
-### **3. API Testing & Documentation**  
-- Hosted **GraphQL Playground** for easy testing.  
-- Well-documented schema for frontend developers.  
+Notes:
+- Settings module: `config.settings`
+- `APPEND_SLASH=False` → endpoints require trailing slashes (e.g., `/user/me/`).
 
----
+## Authentication
+JWT via `djangorestframework-simplejwt`.
+- Login: `POST /auth/login/` → returns access/refresh
+- Auth header: `Authorization: Bearer <access>`
+- Logout (blacklist refresh): `POST /auth/logout/`
+- Change password: `POST /auth/change-password/`
 
-## **🚀 Implementation Process**  
-### **Git Commit Workflow**  
-1. `feat: set up Django project with PostgreSQL`  
-2. `feat: create models for posts, comments, and interactions`  
-3. `feat: implement GraphQL API for querying posts`  
-4. `feat: add like/comment/share mutations`  
-5. `perf: optimize database queries for interactions`  
-6. `docs: update README with API usage`  
+## API Documentation
+- Swagger UI: `/swagger/`
+- Redoc: `/redoc/`
+- Root `/` redirects to `/swagger/`
 
----
+## Apps and Endpoints
 
-## **📤 Submission Details**  
-- **Hosted API**: Deploy on **Render, Heroku, or AWS**.  
-- **GraphQL Playground**: Accessible for testing.  
+### Users (`/user/` and `/users/`)
+- `GET /user/me/`
+- `GET /user/{username}/`
+- `POST /user/{username}/follow/`
+- `POST /user/{username}/unfollow/`
 
----
+### Auth (`/auth/`)
+- `POST /auth/register/`
+- `POST /auth/login/`
+- `POST /auth/logout/`
+- `POST /auth/change-password/`
 
-## **📝 Evaluation Criteria**  
-✅ **Functionality** – Fully working GraphQL API.  
-✅ **Code Quality** – Clean, modular, and well-structured.  
-✅ **Performance** – Optimized database queries.  
-✅ **User Experience** – Intuitive GraphQL Playground.  
-✅ **Version Control** – Clear and frequent commits.  
+### Posts (`/posts/`)
+- `GET /posts/` (paginated)
+- `POST /posts/`
+- `GET|PUT|PATCH|DELETE /posts/{id}/`
+- `POST /posts/{id}/comments/`
+- `POST|DELETE /posts/{id}/like/`
 
----
+### Stories (`/stories/`)
+- `GET /stories/`
+- `POST /stories/`
+- `POST /stories/viewed/`
 
-## **💡 Suggested Next Project**  
-### **🔹 Real-Time Notification System**  
-**Why?**  
-- Extends the social media backend by adding **real-time notifications** (WebSockets).  
-- Users get instant alerts for likes, comments, and shares.  
+### Chat (`/chats/`)
+- `GET|POST /chats/rooms/` (filterable by `name`)
+- `GET /chats/rooms/{room_id}/messages/` (filterable by `sender`)
+- `POST /chats/rooms/{room_id}/messages/new/`
 
-**Tech Stack:**  
-- **Django Channels** (WebSockets)  
-- **Redis** (Pub/Sub for real-time updates)  
-- **GraphQL Subscriptions** (Push notifications)  
+### Feed (`/feed/`)
+- `GET /feed/` (filterable by `user`, `post`)
 
-**Features:**  
-✔ Real-time notifications via WebSockets.  
-✔ User preference settings (email/push/in-app alerts).  
-✔ Scalable with Redis for pub/sub messaging.  
+## Pagination and Filtering
+- Pagination: page-number pagination via `config.pagination.DefaultPagination`
+  - Query params: `?page=1&page_size=20`
+- Filtering: `django-filter` on supported list endpoints
+
+## Environment Variables
+These can be set via your shell or docker compose:
+- `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`
+- `REDIS_HOST`, `REDIS_PORT`
+- `DEBUG` (default `True` for local)
+
+## Static and Media
+- Static collected to `src/staticfiles/` (compose runs `collectstatic`)
+- Media uploads stored under app-specific upload paths (e.g., `post_images/`, `stories/`)
+
+## Admin
+- `/admin/` (create a superuser to access)
+
+## Development Notes
+- Custom user model: `users.User` (email is `USERNAME_FIELD`)
+- Ensure requests use trailing slashes (`APPEND_SLASH=False`)
+- Global default permissions require auth; Swagger auth supported
+
+## Troubleshooting
+- 404 on endpoints: confirm trailing slash and correct base route (e.g., `/posts/`, not `/posts`)
+- DB connection errors: verify Postgres env vars and service availability
+- Swagger not loading: ensure `drf-yasg` installed and server running on port 8010
