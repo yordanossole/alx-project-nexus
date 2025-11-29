@@ -1,4 +1,5 @@
 from datetime import timedelta
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -12,9 +13,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-j8!=yx4g5q(2b444e4+1!zk*1y6)is37*t41(22*i%&oy(d&@_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    "0.0.0.0",
+    "https://dand4.pythonanywhere.com/"
+]
 
 
 # Application definition
@@ -37,10 +44,13 @@ INSTALLED_APPS = [
     'chat',
 
     # third-party apps
-    'redis',
     'rest_framework',
+    'django_filters',
     'rest_framework_simplejwt',
     'channels',
+    
+    # swager
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -79,11 +89,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'HivePostDB',
-        'USER': 'postgres',
-        'PASSWORD': 'postShell',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME', 'default_db'),
+        'USER': os.environ.get('DB_USER', 'default_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'default_password'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -114,7 +124,12 @@ ASGI_APPLICATION = 'config.asgi.application'
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {"hosts": [("127.0.0.1", 6379)]},
+        'CONFIG': {
+            'hosts': [(
+                os.environ.get('REDIS_HOST', 'localhost'),
+                int(os.environ.get('REDIS_PORT', '6379'))
+            )]
+        },
     },
 }
 
@@ -134,6 +149,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -149,7 +165,12 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
-    )
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.DefaultPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 SIMPLE_JWT = {

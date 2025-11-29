@@ -1,0 +1,16 @@
+./venv 
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.env
+*.DS_Store
+*.egg-info/
+*.coverage
+*.mypy_cache/
+*.pytest_cache/
+*.tox/
+*.dist-info/

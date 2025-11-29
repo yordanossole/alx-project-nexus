@@ -15,9 +15,9 @@ class Story(models.Model):
     )
     media = models.FileField(upload_to=story_media_path)
     caption = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.TimeField(auto_now_add=True)
-    expires_at = models.TimeField(editable=True)
-    is_highlighted = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(editable=True, null=True, blank=True)
+    is_highlighted = models.BooleanField(default=False)
     
     class Meta:
         ordering = ['-created_at']

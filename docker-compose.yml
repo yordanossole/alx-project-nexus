@@ -1,0 +1,57 @@
+services:
+  api:
+    build: .
+    container_name: alx-project-nexus-api
+    command: sh -c "
+      python src/manage.py makemigrations &&
+      python src/manage.py migrate && 
+      python src/manage.py collectstatic --noinput &&
+      python src/manage.py runserver 0.0.0.0:8010
+      "
+    volumes:
+      - .:/src
+    ports:
+      - "8010:8010"
+    environment:
+      - DB_NAME=hive_post_db
+      - DB_USER=hive_post_user
+      - DB_PASSWORD=hive_post_password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DJANGO_SETTINGS_MODULE=config.settings
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - db
+      - redis
+    networks:
+      - default
+
+  db:
+    image: postgres:15
+    container_name: alx-project-nexus-db
+    environment: 
+      - POSTGRES_DB=hive_post_db
+      - POSTGRES_USER=hive_post_user
+      - POSTGRES_PASSWORD=hive_post_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - default
+
+  redis:
+    image: redis:7
+    container_name: alx-project-nexus-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+
+networks:
+  default: 
+    driver: bridge

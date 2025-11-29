@@ -1,5 +1,6 @@
 from django.urls import path
+from .views import FeedListView
 
-path = [
-    # Feed URLs
+urlpatterns = [
+    path('', FeedListView.as_view(), name='feed-list'),
 ]

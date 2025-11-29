@@ -23,6 +23,8 @@ from users.models import User
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import GenericAPIView
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 
 class UserRegisterView(GenericAPIView):
@@ -30,6 +32,11 @@ class UserRegisterView(GenericAPIView):
     serializer_class = serializers.UserRegisterSerializer
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_summary="Register a new user",
+        request_body=serializers.UserRegisterSerializer,
+        responses={201: openapi.Response('Registered')}
+    )
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -47,6 +54,11 @@ class LoginView(APIView):
     serializer_class = serializers.LoginSerializer
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_summary="Login",
+        request_body=serializers.LoginSerializer,
+        responses={200: openapi.Response('OK')}
+    )
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -76,6 +88,17 @@ class LoginView(APIView):
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     
+    @swagger_auto_schema(
+        operation_summary="Logout",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'refresh': openapi.Schema(type=openapi.TYPE_STRING)
+            },
+            required=['refresh']
+        ),
+        responses={205: openapi.Response('Logged out')}
+    )
     def post(self, request):
         try:
             refresh_token = request.data["refresh"]
@@ -94,7 +117,12 @@ class ChangePasswordView(APIView):
     def get_object(self):
         return self.request.user
     
-    def update(self, request, *args, **kwargs):
+    @swagger_auto_schema(
+        operation_summary="Change password",
+        request_body=serializers.ChangePasswordSerializer,
+        responses={200: openapi.Response('Password updated')}
+    )
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = self.get_object()

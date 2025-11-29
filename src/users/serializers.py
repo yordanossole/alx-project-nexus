@@ -27,7 +27,7 @@ class UserSerializer(ModelSerializer):
             'updated_at'
         ]
         
-        read_only_fields = ['id', 'password', 'email', 'created_at', 'is_verified', 'picture_profile_url']  
+        read_only_fields = ['id', 'email', 'created_at', 'is_verified', 'profile_picture_url']  
         extra_kwargs = {
             'password': {'write_only': True, 'min_length': 8},
         }

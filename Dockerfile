@@ -1,24 +1,26 @@
-FROM python:3.12-slim-bookworm
+FROM python:3.10
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    redis-server libpq-dev gcc \
+RUN apt-get update && apt-get install -y \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set working directory to project root (repo root mounted to /src)
 WORKDIR /src
 
-# Copy requirements and install Python dependencies with caching
+# Copy requirements and install first for caching
 COPY requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --upgrade pip \
-    && pip install --default-timeout=200 -i https://pypi.org/simple -r requirements.txt
 
-# Copy project files
+RUN pip install -r requirements.txt
+
 COPY . .
 
-# Expose Django port
-EXPOSE 8000
+# Ensure Python can import from the src package directory
+ENV PYTHONPATH=/src/src
 
-# Start Redis and Django
-CMD ["sh", "-c", "redis-server & python manage.py runserver 0.0.0.0:8000"]
+# Run Django on port 8010 and reference manage.py in the src folder
+CMD ["python", "src/manage.py", "runserver", "0.0.0.0:8010"]
